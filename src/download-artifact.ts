@@ -128,9 +128,20 @@ async function run(): Promise<void> {
 
   core.info(`Total of ${artifacts.length} artifact(s) downloaded`)
   core.setOutput(Outputs.DownloadPath, resolvedPath)
+  core.setOutput(Outputs.ArtifactFound, "true")
   core.info('Download artifact has finished successfully')
 }
 
 run().catch(err =>
-  core.setFailed(`Unable to download artifact(s): ${err.message}`)
+  {
+    const name = core.getInput(Inputs.Name, { required: false });
+    const notFoundErrorString = "Unable to find an artifact with the name";
+    if (err.message.includes(notFoundErrorString) && name.trim() !== "") {
+        core.setOutput(Outputs.ArtifactFound, "false");
+        core.warning(err.message);
+    } 
+    else {
+        core.setFailed(`Unable to download artifact(s): ${err.message}`)
+    }
+  }
 )
